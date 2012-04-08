@@ -10,21 +10,19 @@
 #import "CalculatorBrain.h"
 
 @interface CalculatorViewController()
-
-@property (nonatomic) BOOL userIsInTheMiddleOfEnteringNumber;
+@property (nonatomic) BOOL userIsInTheMiddleOfEnteringNumber; // hold state
 @property (nonatomic, strong) CalculatorBrain *brain;
-
-- (void)appendToHistory:(NSString*)text;
-- (void)removeEqualsFromHistoryEnd;
-
+@property (nonatomic, strong) NSDictionary *testVariableValues; // values are provided by test buttons
+- (void) runProgramAndUpdateUI;
 @end
 
 @implementation CalculatorViewController
-
+@synthesize variableValues = _variableValues;
 @synthesize display = _display;
 @synthesize history = _history;
 @synthesize userIsInTheMiddleOfEnteringNumber = _userIsInTheMiddleOfEnteringNumber;
 @synthesize brain = _brain;
+@synthesize testVariableValues = _testVariableValues;
 
 - (CalculatorBrain *) brain {
     if (!_brain) {
@@ -42,8 +40,6 @@
         self.display.text  = digit;
         self.userIsInTheMiddleOfEnteringNumber = YES;
     }
-    // once user has pressed digit equals sign must be removed from history label. 
-    [self removeEqualsFromHistoryEnd]; 
 }
 
 - (IBAction)dotPressed {
@@ -52,7 +48,7 @@
         NSRange currentDotRange = [self.display.text rangeOfString:@"."];
         if(currentDotRange.location == NSNotFound)
             self.display.text = [self.display.text stringByAppendingString:@"."];
-    } else{
+    } else{ // shortcut for user insted of pressing 0 and . 
         self.display.text = @"0.";
         self.userIsInTheMiddleOfEnteringNumber = YES;
     }
@@ -61,49 +57,40 @@
 - (IBAction)enterPressed {
     NSString  *currentText = self.display.text;
     if([currentText hasSuffix:@"."]){
-        // just becasue 0. looks bad in history label.
+        // just becasue 0. looks bad for me in history label.
         currentText = [currentText substringToIndex:[currentText length]-1];
     }
     [self.brain pushOperand:[currentText doubleValue]];
-    [self appendToHistory:currentText];
+    self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
     self.userIsInTheMiddleOfEnteringNumber = NO;
 }
 
-- (IBAction)operationPressed:(UIButton *)sender {
-    if (self.userIsInTheMiddleOfEnteringNumber) {
-        [self enterPressed];
-    }
-    
-    NSString *operation = [sender currentTitle];
-    double result = [self.brain performOperation:operation];
+- (void) runProgramAndUpdateUI{
+    double result = [CalculatorBrain runProgram:[self.brain program] usingVariableValues:[self testVariableValues]];
+    // Update all the labels
     self.display.text = [[NSString alloc] initWithFormat:@"%g", result];
-    // user can press operation button two times so handle this case
-    [self removeEqualsFromHistoryEnd]; 
-    [self appendToHistory:[operation stringByAppendingString:@" ="]];
-    
+    self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
+    self.variableValues.text = @"";
+    for (NSString *variable in [CalculatorBrain variablesUsedInProgram:self.brain.program]) {
+        id value = [self.testVariableValues objectForKey:variable] ? [self.testVariableValues objectForKey:variable]: @"0"; // displaying result as x = (null) is ugly so show default value
+        self.variableValues.text = [self.variableValues.text stringByAppendingFormat:@"%@ = %@ ", variable, value];
+    }
 }
 
-- (void)appendToHistory:(NSString*)text {
-    // append string to history label
-    NSString *currentHistory = self.history.text;
-    // optionally add space between operand and operators
-    if([currentHistory length] != 0 && ![currentHistory hasSuffix:@" "]) {
-        currentHistory = [currentHistory stringByAppendingString:@" "];
+- (IBAction)operationPressed:(UIButton *)sender {
+    if (self.userIsInTheMiddleOfEnteringNumber) { 
+        [self enterPressed]; // perform automatic enter when operation is pressed
     }
-    self.history.text = [currentHistory stringByAppendingString:text];
-}
 
-- (void)removeEqualsFromHistoryEnd {
-    // conditionaly remove equal sign from the end of the history label.
-    if([self.history.text hasSuffix:@"="]) {
-        self.history.text = [self.history.text substringToIndex:[self.history.text length]-1];
-    }
+    [self.brain pushOperation:[sender currentTitle]];
+    [self runProgramAndUpdateUI];
 }
 
 - (IBAction)clearPressed:(id)sender {
     [self.brain clear];
     self.display.text = @"0";
     self.history.text = @"";
+    self.variableValues.text = @"";
     self.userIsInTheMiddleOfEnteringNumber = NO;
 }
 
@@ -111,11 +98,14 @@
     if(self.userIsInTheMiddleOfEnteringNumber) {
         NSString* withoutLast = [self.display.text substringToIndex:[self.display.text length]-1];
         if ([withoutLast length] == 0 || [withoutLast isEqualToString:@"-"]) {
-            self.display.text = @"0";
+            [self runProgramAndUpdateUI];
             self.userIsInTheMiddleOfEnteringNumber = NO;
         } else {
             self.display.text = withoutLast;
         }
+    } else {
+        [self.brain removeLastElement];
+        [self runProgramAndUpdateUI];
     }
 }
 
@@ -137,5 +127,26 @@
     }
 }
 
+- (IBAction)variablePressed:(id)sender {
+    if (self.userIsInTheMiddleOfEnteringNumber) { 
+        [self enterPressed]; // perform automatic enter when operation is pressed
+    }
+    // simply send variable and update history display
+    [self.brain pushVariable:[sender currentTitle]];
+    self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
+}
+
+- (IBAction)testValuesPressed:(UIButton *)sender {
+    // set variables to one of the predifined testcase set
+    if ([@"Test 1" isEqualToString:sender.currentTitle]) {
+        self.testVariableValues =  nil;
+    }else if([@"Test 2" isEqualToString:sender.currentTitle]){
+        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.0], @"x", [[NSNumber alloc] initWithDouble:5], @"y", [[NSNumber alloc] initWithDouble:-4], @"z", nil];
+    }else if([@"Test 3" isEqualToString:sender.currentTitle]){
+        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.5], @"x", [[NSNumber alloc] initWithDouble:10.35], @"y", [[NSNumber alloc] initWithDouble:85], @"z", nil];
+    }
+    
+    [self runProgramAndUpdateUI];
+}
 
 @end

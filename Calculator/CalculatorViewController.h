@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface CalculatorViewController : UIViewController
-@property (weak, nonatomic) IBOutlet UILabel *display;
-@property (weak, nonatomic) IBOutlet UILabel *history;
-
+@property (weak, nonatomic) IBOutlet UILabel *display; // main display 
+@property (weak, nonatomic) IBOutlet UILabel *history; // shows latest description of program
+@property (weak, nonatomic) IBOutlet UILabel *variableValues;
 @end

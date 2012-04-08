@@ -1,4 +1,4 @@
-//
+ //
 //  CalculatorBrain.h
 //  Calculator
 //
@@ -11,12 +11,16 @@
 @interface CalculatorBrain : NSObject
 
 - (void)pushOperand:(double)operand;
-- (double)performOperation:(NSString *)operation;
+- (void)pushVariable:(NSString *)variable;
+- (void)pushOperation:(NSString *)operation;
+- (void)removeLastElement;
 - (void)clear;
-
 @property (nonatomic, readonly) id program;
 
 + (NSString *)descriptionOfProgram:(id)program;
 + (double)runProgram:(id)program;
++ (double)runProgram:(id)program usingVariableValues:(NSDictionary *)variableValues;
++ (BOOL)isOperation:(NSString *)programElement;
++ (NSSet *)variablesUsedInProgram:(id)program;
 
 @end
