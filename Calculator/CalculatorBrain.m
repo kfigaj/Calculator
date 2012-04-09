@@ -55,39 +55,55 @@ static NSSet *operations = nil; // singleton to keep implemented operations
     [self.programStack removeLastObject];
 }
 
-+ (double)popOperandOffProgramStack:(NSMutableArray *)stack{
-
-    double result = 0;
++ (id)popOperandOffProgramStack:(NSMutableArray *)stack withParentOperand:(NSString *)parentOperand{
+    NSNumber *result = [[NSNumber alloc] initWithDouble:0];
     
     id topOfStack = [stack lastObject];
     if (topOfStack) [stack removeLastObject];
+    else if([self.class isOperation:parentOperand]) return @"Insufficient number of operands."; 
     
     if ([topOfStack isKindOfClass:[NSNumber class]]){
-        result = [topOfStack doubleValue];
+        result = topOfStack;
     }
-    else if ([topOfStack isKindOfClass:[NSString class]])
+    else if ([topOfStack isKindOfClass:[NSString class]]) // this must be operation
     {
         NSString *operation = topOfStack;
-        if([operation isEqualToString:@"+"]){
-            result = [self popOperandOffProgramStack:stack] + [self popOperandOffProgramStack:stack];
-        }else if([@"*" isEqualToString:operation]){
-            result = [self popOperandOffProgramStack:stack] * [self popOperandOffProgramStack:stack];
-        }else if([@"-" isEqualToString:operation]){
-            double secArg = [self popOperandOffProgramStack:stack];
-            result = [self popOperandOffProgramStack:stack] - secArg;
-        }else if([@"/" isEqualToString:operation]){
-            double secArg = [self popOperandOffProgramStack:stack];
-            if(secArg) result = [self popOperandOffProgramStack:stack] / secArg;
-        }else if([@"+/-" isEqualToString:operation]){
-            result = -[self popOperandOffProgramStack:stack];
-        }else if([@"sin" isEqualToString:operation]){
-            result = sin([self popOperandOffProgramStack:stack]);
-        }else if([@"cos" isEqualToString:operation]){
-            result = cos([self popOperandOffProgramStack:stack]);
-        }else if([@"sqrt" isEqualToString:operation]){
-            result = sqrt([self popOperandOffProgramStack:stack]);
+        int argumentsNumber = [self numberOfArguments:operation];
+        if(argumentsNumber == 2){  
+            id secArg = [self popOperandOffProgramStack:stack withParentOperand:operation];
+            if ([secArg isKindOfClass:[NSString class]]) return secArg; // pass Error
+            double secArgAsDouble = [secArg doubleValue];
+            id firstArg = [self popOperandOffProgramStack:stack withParentOperand:operation];
+            if ([firstArg isKindOfClass:[NSString class]]) return firstArg;
+            double firstArgAsDouble = [firstArg doubleValue];
+            
+            if([operation isEqualToString:@"+"]){
+                result = [[NSNumber alloc ] initWithDouble:(firstArgAsDouble + secArgAsDouble)];
+            }else if([@"*" isEqualToString:operation]){
+                result = [[NSNumber alloc] initWithDouble:(firstArgAsDouble * secArgAsDouble)];
+            }else if([@"-" isEqualToString:operation]) {
+                result = [[NSNumber alloc] initWithDouble:(firstArgAsDouble - secArgAsDouble)];
+            }else if([@"/" isEqualToString:operation]){
+                if (secArgAsDouble == 0.0) return @"Division by zero.";
+                result = [[NSNumber alloc] initWithDouble:(firstArgAsDouble / secArgAsDouble)];
+            }
+        } else if(argumentsNumber == 1) {
+            id firstArg = [self popOperandOffProgramStack:stack withParentOperand:operation];
+            if ([firstArg isKindOfClass:[NSString class]]) return firstArg;
+            double firstArgAsDouble = [firstArg doubleValue];
+            
+            if([@"+/-" isEqualToString:operation]){
+                result = [[NSNumber alloc] initWithDouble:(-firstArgAsDouble)];
+            }else if([@"sin" isEqualToString:operation]){
+                result = [[NSNumber alloc] initWithDouble:sin(firstArgAsDouble)];
+            }else if([@"cos" isEqualToString:operation]){
+                result = [[NSNumber alloc] initWithDouble:cos(firstArgAsDouble)];
+            }else if([@"sqrt" isEqualToString:operation]){
+                if (firstArgAsDouble < 0) return @"Square root of a negative number.";
+                result = [[NSNumber alloc] initWithDouble:sqrt(firstArgAsDouble)];
+            }
         }else if([@"π" isEqualToString:operation]){
-            result = M_PI;
+            result = [[NSNumber alloc] initWithDouble:M_PI];
         }
     }
     
@@ -108,7 +124,7 @@ static NSSet *operations = nil; // singleton to keep implemented operations
         return NO;
 }
 
-+ (double)runProgram:(id)program{
++ (id)runProgram:(id)program{
     return [self runProgram:program usingVariableValues:nil];
 }
 
@@ -124,7 +140,7 @@ static NSSet *operations = nil; // singleton to keep implemented operations
     return [result count] ? result: nil;
 }
 
-+ (double) runProgram:(id)program usingVariableValues:(NSDictionary *)variableValues{
++ (id) runProgram:(id)program usingVariableValues:(NSDictionary *)variableValues{
     NSMutableArray *stack;
     if ([program isKindOfClass:[NSArray class]]) {
         stack = [program mutableCopy];
@@ -141,7 +157,7 @@ static NSSet *operations = nil; // singleton to keep implemented operations
         }
     }
     
-    return [self popOperandOffProgramStack:stack];
+    return [self popOperandOffProgramStack:stack withParentOperand:nil];
 }
 
 + (int)numberOfArguments:(NSString *)operation{
@@ -168,7 +184,7 @@ static NSSet *operations = nil; // singleton to keep implemented operations
         return NO;
 }
 
-+ (NSString *)descriptionOfTopOfTheStack:(NSMutableArray *)stack withParentOperand:(NSString *) parentOpernad{
++ (NSString *)descriptionOfTopOfTheStack:(NSMutableArray *)stack withParentOperand:(NSString *) parentOperand{
     NSString *result = @"0"; // set default result
     
     id topElement = [stack lastObject];
@@ -182,7 +198,7 @@ static NSSet *operations = nil; // singleton to keep implemented operations
             int argumentsNumber = [self numberOfArguments:topElement];
             if(argumentsNumber == 2){  
                 NSString *format = @"%@ %@ %@";// standard format for 2 arguments operations
-                if([self isOperator:parentOpernad preceding:topElement]) format = @"(%@ %@ %@)"; // we need to add parantheses
+                if([self isOperator:parentOperand preceding:topElement]) format = @"(%@ %@ %@)"; // we need to add parantheses
                 NSString *secondOperand = [self descriptionOfTopOfTheStack:stack withParentOperand:topElement];
                 result = [[NSString alloc]initWithFormat:format, [self descriptionOfTopOfTheStack:stack withParentOperand:topElement], topElement, secondOperand];
             }else if(argumentsNumber == 1) // functions operator

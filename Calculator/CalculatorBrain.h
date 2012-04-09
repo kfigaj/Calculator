@@ -18,8 +18,8 @@
 @property (nonatomic, readonly) id program;
 
 + (NSString *)descriptionOfProgram:(id)program;
-+ (double)runProgram:(id)program;
-+ (double)runProgram:(id)program usingVariableValues:(NSDictionary *)variableValues;
++ (id)runProgram:(id)program;
++ (id)runProgram:(id)program usingVariableValues:(NSDictionary *)variableValues;
 + (BOOL)isOperation:(NSString *)programElement;
 + (NSSet *)variablesUsedInProgram:(id)program;
 

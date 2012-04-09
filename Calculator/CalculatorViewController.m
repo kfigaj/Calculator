@@ -66,9 +66,15 @@
 }
 
 - (void) runProgramAndUpdateUI{
-    double result = [CalculatorBrain runProgram:[self.brain program] usingVariableValues:[self testVariableValues]];
-    // Update all the labels
-    self.display.text = [[NSString alloc] initWithFormat:@"%g", result];
+    id result = [CalculatorBrain runProgram:[self.brain program] usingVariableValues:[self testVariableValues]];
+    if ([result isKindOfClass:[NSString class]]) { // error occured
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error!" message:result delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
+        [self.brain removeLastElement];
+        return;
+    }
+    // Update all labels
+    self.display.text = [[NSString alloc] initWithFormat:@"%g", [result doubleValue]];
     self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
     self.variableValues.text = @"";
     for (NSString *variable in [CalculatorBrain variablesUsedInProgram:self.brain.program]) {
@@ -143,7 +149,7 @@
     }else if([@"Test 2" isEqualToString:sender.currentTitle]){
         self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.0], @"x", [[NSNumber alloc] initWithDouble:5], @"y", [[NSNumber alloc] initWithDouble:-4], @"z", nil];
     }else if([@"Test 3" isEqualToString:sender.currentTitle]){
-        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.5], @"x", [[NSNumber alloc] initWithDouble:10.35], @"y", [[NSNumber alloc] initWithDouble:85], @"z", nil];
+        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.5], @"x", @"x", @"y", @"85", @"z", nil];
     }
     
     [self runProgramAndUpdateUI];
