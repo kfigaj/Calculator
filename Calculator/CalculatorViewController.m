@@ -12,17 +12,14 @@
 @interface CalculatorViewController()
 @property (nonatomic) BOOL userIsInTheMiddleOfEnteringNumber; // hold state
 @property (nonatomic, strong) CalculatorBrain *brain;
-@property (nonatomic, strong) NSDictionary *testVariableValues; // values are provided by test buttons
 - (void) runProgramAndUpdateUI;
 @end
 
 @implementation CalculatorViewController
-@synthesize variableValues = _variableValues;
 @synthesize display = _display;
 @synthesize history = _history;
 @synthesize userIsInTheMiddleOfEnteringNumber = _userIsInTheMiddleOfEnteringNumber;
 @synthesize brain = _brain;
-@synthesize testVariableValues = _testVariableValues;
 
 - (CalculatorBrain *) brain {
     if (!_brain) {
@@ -66,15 +63,10 @@
 }
 
 - (void) runProgramAndUpdateUI{
-    double result = [CalculatorBrain runProgram:[self.brain program] usingVariableValues:[self testVariableValues]];
+    double result = [CalculatorBrain runProgram:[self.brain program]];
     // Update all the labels
     self.display.text = [[NSString alloc] initWithFormat:@"%g", result];
     self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
-    self.variableValues.text = @"";
-    for (NSString *variable in [CalculatorBrain variablesUsedInProgram:self.brain.program]) {
-        id value = [self.testVariableValues objectForKey:variable] ? [self.testVariableValues objectForKey:variable]: @"0"; // displaying result as x = (null) is ugly so show default value
-        self.variableValues.text = [self.variableValues.text stringByAppendingFormat:@"%@ = %@ ", variable, value];
-    }
 }
 
 - (IBAction)operationPressed:(UIButton *)sender {
@@ -90,7 +82,6 @@
     [self.brain clear];
     self.display.text = @"0";
     self.history.text = @"";
-    self.variableValues.text = @"";
     self.userIsInTheMiddleOfEnteringNumber = NO;
 }
 
@@ -136,17 +127,5 @@
     self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
 }
 
-- (IBAction)testValuesPressed:(UIButton *)sender {
-    // set variables to one of the predifined testcase set
-    if ([@"Test 1" isEqualToString:sender.currentTitle]) {
-        self.testVariableValues =  nil;
-    }else if([@"Test 2" isEqualToString:sender.currentTitle]){
-        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.0], @"x", [[NSNumber alloc] initWithDouble:5], @"y", [[NSNumber alloc] initWithDouble:-4], @"z", nil];
-    }else if([@"Test 3" isEqualToString:sender.currentTitle]){
-        self.testVariableValues = [[NSDictionary alloc] initWithObjectsAndKeys: [[NSNumber alloc] initWithDouble:0.5], @"x", [[NSNumber alloc] initWithDouble:10.35], @"y", [[NSNumber alloc] initWithDouble:85], @"z", nil];
-    }
-    
-    [self runProgramAndUpdateUI];
-}
 
 @end
