@@ -8,7 +8,19 @@
 
 #import <UIKit/UIKit.h>
 
+@class GraphView;
+
+@protocol GraphViewDataSource
+
+- (double) calculateFor:(GraphView *)sender valueFor:(double)x;
+
+@end
+
 @interface GraphView : UIView
+
+@property (nonatomic, weak) id<GraphViewDataSource> graphViewData;
+@property (nonatomic) CGFloat scale;
+@property (nonatomic) CGPoint origin;
 
 
 

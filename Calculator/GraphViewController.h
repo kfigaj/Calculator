@@ -8,6 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+
 @interface GraphViewController : UIViewController
+
+@property (nonatomic, strong) id program; // description of function to be drawn
 
 @end

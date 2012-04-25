@@ -8,6 +8,7 @@
 
 #import "CalculatorViewController.h"
 #import "CalculatorBrain.h"
+#import "GraphViewController.h"
 
 @interface CalculatorViewController()
 @property (nonatomic) BOOL userIsInTheMiddleOfEnteringNumber; // hold state
@@ -125,6 +126,14 @@
     // simply send variable and update history display
     [self.brain pushVariable:[sender currentTitle]];
     self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
+}
+
+
+-(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
+    if([segue.identifier isEqualToString:@"DrawGraph"]){
+        [segue.destinationViewController setProgram:[self.brain program]];
+    }
+    
 }
 
 

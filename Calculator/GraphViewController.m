@@ -7,37 +7,37 @@
 //
 
 #import "GraphViewController.h"
+#import "CalculatorBrain.h"
+#import "GraphView.h"
 
-@interface GraphViewController ()
+@interface GraphViewController () <GraphViewDataSource>
+
+@property (nonatomic, weak) IBOutlet GraphView* graphView;
 
 @end
 
 @implementation GraphViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
+@synthesize program = _program;
+@synthesize graphView = _graphView;
+
+- (void) setProgram:(id)program {
+    _program = program;
+    [self.graphView setNeedsDisplay];
 }
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view.
+- (void) setGraphView:(GraphView *)graphView {
+    _graphView = graphView;
+    _graphView.graphViewData = self;
 }
 
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
+- (void)viewDidLoad{
+    self.title = [CalculatorBrain descriptionOfProgram:self.program];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+
+- (double) calculateFor:(GraphView *)sender valueFor:(double)x {
+    return [CalculatorBrain runProgram:self.program usingVariableValues: [NSDictionary dictionaryWithObject:[NSNumber numberWithDouble:x] forKey:@"x"]];
 }
 
 @end
