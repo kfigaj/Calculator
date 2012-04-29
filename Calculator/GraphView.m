@@ -32,21 +32,72 @@
     }
 }
 
+- (void) setOrigin:(CGPoint)origin {
+    if (!CGPointEqualToPoint(origin, _origin)) {
+        _origin = origin;
+        [self setNeedsDisplay]; // redraw only when it's needed
+    }
+}
 
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
+- (CGPoint) origin {
+    if(CGPointEqualToPoint(CGPointZero, _origin)) { // TODO get value from user dict
+        _origin.x = self.bounds.size.width/2;
+        _origin.y = self.bounds.size.height/2;
+    }
+    return _origin;
+}
+
+- (IBAction) handlePinchFrom:(UIPinchGestureRecognizer *) gestureRecognizer {
+    if (gestureRecognizer.state == UIGestureRecognizerStateChanged ||
+        gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        self.scale *= gestureRecognizer.scale;
+        gestureRecognizer.scale = 1; // use incremental scale
+    }
+    
+}
+
+- (IBAction) handlePanFrom:(UIPanGestureRecognizer *) gestureRecognizer {
+    if (gestureRecognizer.state == UIGestureRecognizerStateChanged ||
+        gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        CGPoint translation = [gestureRecognizer translationInView:self];
+        self.origin = CGPointMake(self.origin.x + translation.x, self.origin.y + translation.y);
+        [gestureRecognizer setTranslation:CGPointZero inView:self]; // use incremental translation
+    }
+}
+
+- (IBAction) handleTapFrom:(UITapGestureRecognizer *) gestureRecognizer {
+    if (gestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        CGPoint newOrigin = [gestureRecognizer locationInView:self];
+        self.origin = newOrigin;
+    }
+}
+
+
 - (void)drawRect:(CGRect)rect
 {
     // Drawing code
-    [AxesDrawer drawAxesInRect:self.bounds originAtPoint:CGPointMake(self.bounds.size.width/2, self.bounds.size.height/2) scale:self.scale];
+    [AxesDrawer drawAxesInRect:self.bounds originAtPoint:self.origin scale:self.scale];
+    
+    CGFloat step = 1/[self contentScaleFactor];
     
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetLineWidth(context, 1.0);
+    [[UIColor blueColor] setStroke];
+    
     CGContextBeginPath(context);
-    /*
-    for (doube ; <#condition#>; <#increment#>) {
-        <#statements#>
-    }*/
+    //start from left hand side of the view
+    CGContextMoveToPoint(context, self.bounds.origin.x,  self.origin.y);
+    
+    for (double x=0 ; x < self.bounds.size.width; x += step) {
+        // convert x to units and get value of funtion for it from data source
+        double y = [self.graphViewData calculateFor:self valueFor:(x-self.origin.x)/self.scale];
+        
+        // convert result to view coordinates and draw a line
+        CGContextAddLineToPoint(context, x, (self.origin.y - y*self.scale));
+        
+        // move point 
+        CGContextMoveToPoint(context, x, (self.origin.y - y*self.scale));
+    }
     
     CGContextStrokePath(context);
 }

@@ -10,6 +10,7 @@
 
 @class GraphView;
 
+// data source for funtion values
 @protocol GraphViewDataSource
 
 - (double) calculateFor:(GraphView *)sender valueFor:(double)x;
@@ -19,9 +20,12 @@
 @interface GraphView : UIView
 
 @property (nonatomic, weak) id<GraphViewDataSource> graphViewData;
-@property (nonatomic) CGFloat scale;
+// graph properties
+@property (nonatomic) CGFloat scale; 
 @property (nonatomic) CGPoint origin;
 
-
+- (IBAction) handlePinchFrom:(UIGestureRecognizer *) gestureRecognizer;
+- (IBAction) handlePanFrom:(UIGestureRecognizer *) gestureRecognizer;
+- (IBAction) handleTapFrom:(UITapGestureRecognizer *) gestureRecognizer;
 
 @end

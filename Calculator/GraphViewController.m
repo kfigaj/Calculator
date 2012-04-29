@@ -28,7 +28,14 @@
 
 - (void) setGraphView:(GraphView *)graphView {
     _graphView = graphView;
-    _graphView.graphViewData = self;
+    self.graphView.graphViewData = self;
+    [self.graphView addGestureRecognizer:[[UIPinchGestureRecognizer alloc]initWithTarget:self.graphView action:@selector(handlePinchFrom:)]];
+    [self.graphView addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self.graphView action:@selector(handlePanFrom:)]];
+    
+    // we require three taps to move origin to selected point
+    UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self.graphView action:@selector(handleTapFrom:)];
+    tapRecognizer.numberOfTapsRequired = 3;
+    [self.graphView addGestureRecognizer:tapRecognizer];
 }
 
 - (void)viewDidLoad{
