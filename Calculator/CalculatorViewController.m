@@ -14,6 +14,7 @@
 @property (nonatomic) BOOL userIsInTheMiddleOfEnteringNumber; // hold state
 @property (nonatomic, strong) CalculatorBrain *brain;
 - (void) runProgramAndUpdateUI;
+- (GraphViewController *) scrolViewGraphViewController;
 @end
 
 @implementation CalculatorViewController
@@ -128,13 +129,41 @@
     self.history.text = [CalculatorBrain descriptionOfProgram:[self.brain program]];
 }
 
+- (GraphViewController *) scrolViewGraphViewController {
+    // get detail controller of splitView
+    id details = [self.splitViewController.viewControllers lastObject];
+    // return only if it's a GraphViewController
+    if(![details isKindOfClass:[GraphViewController class]]) {
+        return nil;
+    }
+    return details;
+}
 
--(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
+- (IBAction)graphPressed:(id)sender {
+    if ([self scrolViewGraphViewController]) {
+        // graph in split view controller
+        [[self scrolViewGraphViewController] setProgram:[self.brain program]];
+    }else {
+        [self performSegueWithIdentifier:@"DrawGraph" sender:sender];
+    }
+}
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
     if([segue.identifier isEqualToString:@"DrawGraph"]){
         [segue.destinationViewController setProgram:[self.brain program]];
     }
     
 }
+
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        return YES;
+    } else {
+        // support portait only on IPhone
+        return toInterfaceOrientation == UIInterfaceOrientationPortrait; 
+    }
+}
+
 
 
 @end

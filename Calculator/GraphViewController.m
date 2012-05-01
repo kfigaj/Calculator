@@ -47,4 +47,9 @@
     return [CalculatorBrain runProgram:self.program usingVariableValues: [NSDictionary dictionaryWithObject:[NSNumber numberWithDouble:x] forKey:@"x"]];
 }
 
+
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+
 @end
