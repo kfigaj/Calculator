@@ -40,7 +40,7 @@
 }
 
 - (CGPoint) origin {
-    if(CGPointEqualToPoint(CGPointZero, _origin)) { // TODO get value from user dict
+    if(CGPointEqualToPoint(CGPointZero, _origin)) {
         _origin.x = self.bounds.size.width/2;
         _origin.y = self.bounds.size.height/2;
     }
@@ -72,7 +72,6 @@
     }
 }
 
-
 - (void)drawRect:(CGRect)rect
 {
     // Drawing code
@@ -86,7 +85,7 @@
     
     CGContextBeginPath(context);
     //start from left hand side of the view
-    CGContextMoveToPoint(context, self.bounds.origin.x,  self.origin.y);
+    CGContextMoveToPoint(context, self.bounds.origin.x-1,  self.origin.y);
     
     for (double x=0 ; x < self.bounds.size.width; x += step) {
         // convert x to units and get value of funtion for it from data source

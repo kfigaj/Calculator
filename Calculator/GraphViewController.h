@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 
-@interface GraphViewController : UIViewController
+@interface GraphViewController : UIViewController <UISplitViewControllerDelegate>
 
 @property (nonatomic, strong) id program; // description of function to be drawn
 
